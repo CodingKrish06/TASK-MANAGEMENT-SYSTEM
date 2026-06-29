@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Sprint - {{ project.name }}{% endblock %}
+
+{% block header_title %}Create Sprint for {{ project.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="glass-card">
+        <h3 class="section-title" style="margin-bottom: 24px;">🏃 Sprint Details</h3>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert-item error" style="margin-bottom: 20px;">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Sprint Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.name.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.start_date.id_for_label }}">Start Date</label>
+                {{ form.start_date }}
+                {% if form.start_date.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.start_date.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.end_date.id_for_label }}">End Date</label>
+                {{ form.end_date }}
+                {% if form.end_date.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.end_date.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}" style="margin-bottom: 0; cursor: pointer;">Activate Sprint immediately</label>
+                {% if form.is_active.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.is_active.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+            
+            <small style="color: var(--text-muted); display: block; margin-bottom: 24px;">
+                Activating this sprint will automatically deactivate all other sprints in this project workspace.
+            </small>
+
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                    💾 Save Sprint
+                </button>
+                <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                    ✕ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

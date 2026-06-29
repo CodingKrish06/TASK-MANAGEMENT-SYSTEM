@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}System Initialization Setup - Task Management System{% endblock %}
+
+{% block header_title %}Initial Workspace Setup{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto;">
+    <div class="glass-card" style="text-align: center; padding: 40px;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🚀</div>
+        
+        {% if needs_project %}
+            <h3 class="section-title" style="justify-content: center; margin-bottom: 12px;">Step 1: Create a Project Workspace</h3>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+                Welcome to Task Manager! To get started, you must first create your initial project workspace so you can begin assigning tasks and inviting team members.
+            </p>
+            <a href="{% url 'project_create' %}" class="btn btn-primary" style="padding: 12px 30px; font-size: 15px;">
+                ➕ Create First Project
+            </a>
+        {% else %}
+            <h3 class="section-title" style="justify-content: center; margin-bottom: 12px;">Step 2: Assign Team Members</h3>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+                Select a project workspace below to configure its team members.
+            </p>
+
+            <form method="GET" action="{% url 'project_setup_members' %}" style="display: flex; flex-direction: column; gap: 20px; align-items: center;">
+                <div class="form-group" style="width: 100%; text-align: left;">
+                    <label for="project" style="font-weight: 600; font-size: 13px; color: var(--text-muted);">Choose Project</label>
+                    <select name="project" id="project" class="form-control">
+                        {% for p in projects %}
+                            <option value="{{ p.id }}">{{ p.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                    Next: Add Members →
+                </button>
+            </form>
+        {% endif %}
+
+        <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <a href="{% url 'dashboard' %}" style="color: var(--text-muted); font-size: 13px; text-decoration: none;">
+                Skip and go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

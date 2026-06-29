@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Task Management System{% endblock %}
+
+{% block header_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <div class="glass-card">
+        <h3 class="section-title" style="margin-bottom: 24px;">📋 Task Configuration</h3>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert-item error" style="margin-bottom: 20px;">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Task Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.title.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">Detailed Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.description.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="{{ form.task_type.id_for_label }}">Task Type</label>
+                    {{ form.task_type }}
+                    {% if form.task_type.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.task_type.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.status.id_for_label }}">Status</label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.status.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.priority.id_for_label }}">Priority</label>
+                    {{ form.priority }}
+                    {% if form.priority.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.priority.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="{{ form.sprint.id_for_label }}">Assign to Sprint Interval</label>
+                    {{ form.sprint }}
+                    {% if form.sprint.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.sprint.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.assignee.id_for_label }}">Assignee</label>
+                    {{ form.assignee }}
+                    {% if form.assignee.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.assignee.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="{{ form.start_date.id_for_label }}">Start Date</label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.start_date.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.due_date.id_for_label }}">Due Date</label>
+                    {{ form.due_date }}
+                    {% if form.due_date.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.due_date.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="{{ form.estimated_hours.id_for_label }}">Estimated Hours</label>
+                    {{ form.estimated_hours }}
+                    {% if form.estimated_hours.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.estimated_hours.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.logged_hours.id_for_label }}">Logged Hours</label>
+                    {{ form.logged_hours }}
+                    {% if form.logged_hours.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.logged_hours.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                    💾 Save Task
+                </button>
+                {% if task %}
+                    <a href="{% url 'task_detail' task.id %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                        ✕ Cancel
+                    </a>
+                {% else %}
+                    <a href="{% url 'kanban_board' project.id %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                        ✕ Cancel
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

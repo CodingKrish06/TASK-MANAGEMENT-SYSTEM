@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Task Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+        }
+
+        .back-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .admin-header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .admin-header h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .admin-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .stat-label {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .admin-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .admin-section h3 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .admin-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .admin-btn {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            color: #856404;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 5px;
+            color: #155724;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            color: #666;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚙️ Admin Panel</h1>
+        <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+    </header>
+
+    <div class="container">
+        <div class="admin-header">
+            <h2>System Administration</h2>
+            <p>Manage users, projects, and system configuration</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value">{{ all_users }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">✓</div>
+                <div class="stat-label">Active Users</div>
+                <div class="stat-value">{{ active_users }}</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👨‍💼</div>
+                <div class="stat-label">Staff Members</div>
+                <div class="stat-value">{{ staff_users }}</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>👥 User Management</h3>
+            <p style="color: #666; margin-bottom: 20px;">Manage user accounts, roles, and permissions</p>
+            <div class="admin-buttons">
+                <a href="/admin/" class="admin-btn">👤 View All Users</a>
+                <a href="/admin/accounts/userprofile/" class="admin-btn">🔧 Manage Roles</a>
+            </div>
+            <ul class="feature-list">
+                <li>Create, update, and delete user accounts</li>
+                <li>Assign roles and permissions</li>
+                <li>Activate/deactivate user accounts</li>
+                <li>Reset user passwords</li>
+            </ul>
+        </div>
+
+        <div class="admin-section">
+            <h3>📋 Project Management</h3>
+            <p style="color: #666; margin-bottom: 20px;">Oversee all projects in the system</p>
+            <div class="admin-buttons">
+                <a href="#" class="admin-btn">📂 View All Projects</a>
+                <a href="#" class="admin-btn">➕ Create Project</a>
+            </div>
+            <ul class="feature-list">
+                <li>Create and manage projects</li>
+                <li>Monitor project progress</li>
+                <li>Manage project members</li>
+            </ul>
+        </div>
+
+        <div class="admin-section">
+            <h3>⚙️ System Configuration</h3>
+            <p style="color: #666; margin-bottom: 20px;">Configure system settings and features</p>
+            <div class="admin-buttons">
+                <a href="/admin/" class="admin-btn">🔧 Django Admin</a>
+            </div>
+            <ul class="feature-list">
+                <li>View system logs</li>
+                <li>Configure email settings</li>
+                <li>Manage system permissions</li>
+            </ul>
+            <div class="success-box">
+                ✓ System is running normally. All services are operational.
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>📊 Analytics & Reports</h3>
+            <p style="color: #666; margin-bottom: 20px;">Generate reports and view system analytics</p>
+            <div class="admin-buttons">
+                <a href="#" class="admin-btn">📈 View Reports</a>
+                <a href="#" class="admin-btn">📉 System Analytics</a>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>⚠️ Admin Notes</h3>
+            <div class="warning-box">
+                As an Administrator, you have full access to all system features. Please use your privileges responsibly and maintain security best practices. Always keep backups of important data and regularly monitor system activity.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Task Management System{% endblock %}
+
+{% block header_title %}System Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--accent);
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.15);
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-number {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text-main);
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+    }
+
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 1024px) {
+        .dashboard-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .list-item {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .list-item:hover {
+        background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .item-title {
+        font-weight: 600;
+        color: var(--text-main);
+        font-size: 15px;
+    }
+
+    .item-subtitle {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 40px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- Statistics Cards Grid -->
+    <div class="stats-grid">
+        <!-- Card 1: Total Users -->
+        <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ total_users }}</span>
+                <span class="stat-label">Total Users</span>
+            </div>
+        </div>
+
+        <!-- Card 2: Total Projects -->
+        <div class="stat-card">
+            <div class="stat-icon">📁</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ total_projects }}</span>
+                <span class="stat-label">Total Projects</span>
+            </div>
+        </div>
+
+        <!-- Card 3: Total Tasks -->
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ total_tasks }}</span>
+                <span class="stat-label">Total Tasks</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Completed Tasks -->
+        <div class="stat-card">
+            <div class="stat-icon" style="color: var(--success);">✔</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ completed_tasks }}</span>
+                <span class="stat-label">Completed Tasks</span>
+            </div>
+        </div>
+
+        <!-- Card 5: Pending Tasks -->
+        <div class="stat-card">
+            <div class="stat-icon" style="color: var(--warning);">⌛</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ pending_tasks }}</span>
+                <span class="stat-label">Pending Tasks</span>
+            </div>
+        </div>
+
+        <!-- Card 6: Notifications -->
+        <div class="stat-card">
+            <div class="stat-icon" style="color: var(--danger);">🔔</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ unread_notifications_count }}</span>
+                <span class="stat-label">Notifications</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Panels -->
+    <div class="dashboard-layout">
+        <!-- Assigned Tasks Panel -->
+        <div class="glass-card">
+            <div class="section-header">
+                <h3 class="section-title">✍️ Assigned to Me</h3>
+                <span class="badge-status todo">{{ total_assigned_count }} Assigned</span>
+            </div>
+
+            {% if assigned_tasks.exists %}
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Task Title</th>
+                                <th>Project</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in assigned_tasks %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'task_detail' task.id %}" style="color: var(--text-main); text-decoration: none; font-weight: 600;">
+                                            {{ task.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ task.project.name }}</td>
+                                    <td>
+                                        <span class="badge-priority {{ task.priority|lower }}">
+                                            {{ task.priority }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status {% if task.status == 'To Do' %}todo{% elif task.status == 'In Progress' %}in-progress{% elif task.status == 'Review' %}in-review{% elif task.status == 'Blocked' %}todo{% elif task.status == 'Done' %}done{% endif %}">
+                                            {{ task.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ task.due_date|date:"M d, Y"|default:"--" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🎉</div>
+                    <p>No tasks currently assigned to you!</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Activity Logs Panel -->
+        <div class="glass-card" style="margin-top: 30px;">
+            <h3 class="section-title" style="margin-bottom: 20px;">⏱️ Recent Activity Logs</h3>
+            {% if activities %}
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    {% for log in activities %}
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.01); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 16px;">⏱️</span>
+                                <div>
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--text-main);">
+                                        {{ log.action }}
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                        by @{{ log.user.username|default:"System" }}
+                                    </div>
+                                </div>
+                            </div>
+                            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">
+                                {{ log.created_at|timesince }} ago
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state" style="padding: 20px 0;">
+                    <div class="empty-state-icon">⏱️</div>
+                    <p style="font-size: 13px;">No activity logged yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Side: Projects and Workload summary -->
+        <div>
+            <!-- Active Projects Panel -->
+            <div class="glass-card" style="padding: 24px;">
+                <div class="section-header" style="margin-bottom: 16px;">
+                    <h3 class="section-title" style="font-size: 16px;">📁 Active Projects</h3>
+                    <a href="{% url 'project_list' %}" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600;">View All</a>
+                </div>
+
+                {% if projects.exists %}
+                    <div>
+                        {% for project in projects|slice:":5" %}
+                            <div class="list-item">
+                                <div>
+                                    <div class="item-title">
+                                        <a href="{% url 'project_detail' project.id %}" style="color: inherit; text-decoration: none;">{{ project.name }}</a>
+                                    </div>
+                                    <div class="item-subtitle">Ends on {{ project.end_date|date:"M d, Y" }}</div>
+                                </div>
+                                <span class="badge-status todo" style="font-size: 11px;">
+                                    {{ project.tasks.count }} Tasks
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state-icon" style="font-size: 24px;">📁</div>
+                        <p style="font-size: 13px;">No projects registered yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Quick Actions Panel -->
+            <div class="glass-card" style="padding: 24px;">
+                <h3 class="section-title" style="font-size: 16px; margin-bottom: 16px;">⚡ Quick Actions</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="{% url 'profile' %}" class="btn btn-secondary" style="justify-content: center; width: 100%;">
+                        👤 View Profile
+                    </a>
+                    {% if is_admin or is_pm %}
+                        <a href="{% url 'project_create' %}" class="btn btn-primary" style="justify-content: center; width: 100%;">
+                            ➕ Create Project
+                        </a>
+                        <a href="{% url 'global_team_members' %}" class="btn btn-secondary" style="justify-content: center; width: 100%;">
+                            👥 Manage Members
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

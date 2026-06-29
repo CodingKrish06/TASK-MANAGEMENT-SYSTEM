@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.title }} - Task Details{% endblock %}
+
+{% block header_title %}Task #{{ task.id }}: {{ task.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-detail-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 1024px) {
+        .task-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .comment-item {
+        background-color: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .attachment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background-color: rgba(255,255,255,0.01);
+        margin-bottom: 8px;
+    }
+
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="task-detail-grid">
+    <!-- Left Panel: Core Description, Comments, Attachments -->
+    <div>
+        <!-- Task Header & Description -->
+        <div class="glass-card">
+            <div class="section-header">
+                <h3 class="section-title">📝 Description</h3>
+                <span class="badge-status todo">{{ task.sprint.name|default:"Backlog" }}</span>
+            </div>
+            
+            <p style="color: var(--text-main); font-size: 15px; line-height: 1.6; white-space: pre-line; background-color: rgba(0,0,0,0.1); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);">
+                {{ task.description|default:"No description provided." }}
+            </p>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="glass-card">
+            <h3 class="section-title" style="margin-bottom: 20px;">💬 Discussion</h3>
+            
+            <!-- Comment Input -->
+            <form method="POST" style="margin-bottom: 24px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_comment">
+                <div class="form-group">
+                    {{ comment_form.content }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">
+                    Send Comment
+                </button>
+            </form>
+
+            <!-- Comments List -->
+            <div>
+                {% for comment in comments %}
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span style="font-weight: 600; color: var(--accent); font-size: 13px;">{{ comment.author.username }}</span>
+                            <span style="color: var(--text-muted); font-size: 11px;">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <p style="font-size: 14px; line-height: 1.5; color: var(--text-main);">{{ comment.content }}</p>
+                    </div>
+                {% empty %}
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">No comments on this task yet. Start the conversation!</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Attachments Section -->
+        <div class="glass-card">
+            <h3 class="section-title" style="margin-bottom: 20px;">📎 Attachments</h3>
+            
+            <!-- Upload Form -->
+            <form method="POST" enctype="multipart/form-data" style="margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-end;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="upload_attachment">
+                <div style="flex-grow: 1;">
+                    {{ attachment_form.file }}
+                </div>
+                <button type="submit" class="btn btn-secondary" style="padding: 10px 20px;">
+                    Upload
+                </button>
+            </form>
+
+            <!-- Attachments List -->
+            <div>
+                {% for attachment in attachments %}
+                    <div class="attachment-item">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">📁</span>
+                            <div style="display: flex; flex-direction: column;">
+                                <a href="{{ attachment.file.url }}" target="_blank" style="color: var(--text-main); font-weight: 600; text-decoration: none; font-size: 13px;">
+                                    {{ attachment.filename }}
+                                </a>
+                                <span style="font-size: 11px; color: var(--text-muted);">Uploaded by {{ attachment.uploaded_by.username }} on {{ attachment.uploaded_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        <a href="{{ attachment.file.url }}" download class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                            Download
+                        </a>
+                    </div>
+                {% empty %}
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">No files attached to this task.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Parameters & Dependencies -->
+    <div>
+        <!-- Parameters Card -->
+        <div class="glass-card" style="padding: 24px;">
+            <h3 class="section-title" style="font-size: 16px; margin-bottom: 20px;">📋 Task Configuration</h3>
+            
+            <!-- Quick Status Form -->
+            <form method="POST" action="{% url 'update_task_status' task.id %}" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                {% csrf_token %}
+                <label for="status" style="display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Update Status</label>
+                <div style="display: flex; gap: 8px;">
+                    <select name="status" id="status" class="form-control" style="padding: 8px 12px; font-size: 13px;">
+                        {% for status_val, status_name in task.STATUS_CHOICES %}
+                            <option value="{{ status_val }}" {% if task.status == status_val %}selected{% endif %}>{{ status_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">Save</button>
+                </div>
+            </form>
+
+            <div class="info-list">
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Status</span>
+                    <span class="badge-status {% if task.status == 'To Do' %}todo{% elif task.status == 'In Progress' %}in-progress{% elif task.status == 'In Review' %}in-review{% elif task.status == 'Done' %}done{% endif %}">
+                        {{ task.status }}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Priority</span>
+                    <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Assignee</span>
+                    <span style="font-weight: 600; font-size: 13px;">👤 {{ task.assignee.username|default:"Unassigned" }}</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Reporter</span>
+                    <span style="font-weight: 600; font-size: 13px;">👤 {{ task.reporter.username }}</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Start Date</span>
+                    <span style="font-weight: 600; font-size: 13px;">{{ task.start_date|date:"M d, Y"|default:"--" }}</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Due Date</span>
+                    <span style="font-weight: 600; font-size: 13px;">{{ task.due_date|date:"M d, Y"|default:"--" }}</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Estimated Hours</span>
+                    <span style="font-weight: 600; font-size: 13px; color: var(--info);">{{ task.estimated_hours|default:"0.00" }}h</span>
+                </div>
+                <div class="info-row">
+                    <span style="color: var(--text-muted); font-size: 13px;">Logged Hours</span>
+                    <span style="font-weight: 600; font-size: 13px; color: var(--success);">{{ task.logged_hours|default:"0.00" }}h</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <a href="{% url 'task_edit' task.id %}" class="btn btn-secondary" style="flex: 1; justify-content: center; font-size: 12px; padding: 8px;">
+                    ✏️ Edit Task
+                </a>
+                {% if is_manager %}
+                    <a href="{% url 'task_delete' task.id %}" class="btn btn-danger" style="flex: 1; justify-content: center; font-size: 12px; padding: 8px;">
+                        ✕ Delete
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Task Dependencies Card -->
+        <div class="glass-card" style="padding: 24px;">
+            <h3 class="section-title" style="font-size: 16px; margin-bottom: 20px;">🔗 Dependencies</h3>
+            
+            <!-- Add Dependency Form -->
+            <form method="POST" action="{% url 'add_dependency' task.id %}" style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="id_depends_on" style="font-size: 11px;">Depends On</label>
+                    {{ dependency_form.depends_on }}
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="id_dependency_type" style="font-size: 11px;">Type</label>
+                    {{ dependency_form.dependency_type }}
+                </div>
+                <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center; font-size: 12px; padding: 6px;">
+                    Add Dependency Link
+                </button>
+            </form>
+
+            <!-- Dependencies List -->
+            <div>
+                {% for dep in dependencies %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dotted var(--border-color); font-size: 13px;">
+                        <span>
+                            <strong>{{ dep.get_dependency_type_display }}</strong>: 
+                            <a href="{% url 'task_detail' dep.depends_on.id %}" style="color: var(--accent); text-decoration: none;">
+                                #{{ dep.depends_on.id }}
+                            </a>
+                        </span>
+                        <a href="{% url 'remove_dependency' dep.id %}" style="color: var(--danger); text-decoration: none; font-weight: 700; font-size: 14px;" title="Remove relationship">✕</a>
+                    </div>
+                {% empty %}
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">No dependency blocks set.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

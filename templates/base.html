@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Management System{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Core Variables and Base CSS -->
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --warning-glow: rgba(245, 158, 11, 0.15);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.15);
+            --info: #0ea5e9;
+            --info-glow: rgba(14, 165, 233, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand-icon {
+            font-size: 28px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .brand-name {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item a {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            gap: 16px;
+        }
+
+        .sidebar-item a:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+
+        .sidebar-item.active a {
+            color: #ffffff;
+            background: var(--accent-gradient);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .sidebar-item.active a:hover {
+            transform: none;
+        }
+
+        .badge {
+            background-color: var(--danger);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: auto;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+
+        .sidebar-user {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 18px;
+            color: white;
+        }
+
+        .user-meta {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role-badge {
+            font-size: 11px;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Main Content Layout */
+        .main-layout {
+            margin-left: 280px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            width: calc(100% - 280px);
+        }
+
+        /* Top Header */
+        .top-header {
+            height: 80px;
+            background-color: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .btn-quick-add {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-quick-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Content Container */
+        .content-container {
+            padding: 40px;
+            flex-grow: 1;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Django Messages Alert */
+        .alerts-wrapper {
+            margin-bottom: 24px;
+        }
+
+        .alert-item {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .alert-item.success {
+            background-color: var(--success-glow);
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .alert-item.error {
+            background-color: var(--danger-glow);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .alert-item.warning {
+            background-color: var(--warning-glow);
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .alert-item.info {
+            background-color: var(--info-glow);
+            color: var(--info);
+            border-color: rgba(14, 165, 233, 0.2);
+        }
+
+        /* Common Page UI Styles */
+        .glass-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Buttons styling */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-main);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-glow);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Modern Tables styling */
+        .table-responsive {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .custom-table th {
+            padding: 16px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .custom-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .custom-table tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Forms styling */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .form-control, input[type="text"], input[type="email"], input[type="password"], input[type="tel"], input[type="date"], select, textarea {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, input[type="tel"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        /* Status and Priority Badges */
+        .badge-status, .badge-priority {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge-status.todo { background-color: var(--info-glow); color: var(--info); }
+        .badge-status.in-progress { background-color: var(--warning-glow); color: var(--warning); }
+        .badge-status.in-review { background-color: rgba(168, 85, 247, 0.15); color: #c084fc; }
+        .badge-status.done { background-color: var(--success-glow); color: var(--success); }
+
+        .badge-priority.low { background-color: rgba(71, 85, 105, 0.2); color: var(--text-muted); }
+        .badge-priority.medium { background-color: var(--info-glow); color: var(--info); }
+        .badge-priority.high { background-color: var(--warning-glow); color: var(--warning); }
+        .badge-priority.critical { background-color: var(--danger-glow); color: var(--danger); }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-layout {
+                margin-left: 0;
+                width: 100%;
+            }
+            .top-header {
+                padding: 0 20px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">⚡</span>
+            <span class="brand-name">Task Manager</span>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="sidebar-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <a href="{% url 'dashboard' %}">
+                    <span>🏠</span>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-item {% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'profile_edit' %}active{% endif %}">
+                <a href="{% url 'profile' %}">
+                    <span>👤</span>
+                    <span>User Profile</span>
+                </a>
+            </li>
+            <li class="sidebar-item {% if 'project' in request.resolver_match.url_name and not 'member' in request.resolver_match.url_name and not 'report' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'project_list' %}">
+                    <span>📁</span>
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li class="sidebar-item {% if 'global_team' in request.resolver_match.url_name or 'project_member' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'global_team_members' %}">
+                    <span>👥</span>
+                    <span>Team Members</span>
+                </a>
+            </li>
+            <li class="sidebar-item {% if 'kanban' in request.resolver_match.url_name or 'task' in request.resolver_match.url_name %}active{% endif %}">
+                {% if sidebar_projects.exists %}
+                    <a href="{% url 'kanban_board' sidebar_projects.first.id %}">
+                        <span>✅</span>
+                        <span>Tasks</span>
+                    </a>
+                {% else %}
+                    <a href="#" onclick="alert('Please create or join a project first!'); return false;">
+                        <span>✅</span>
+                        <span>Tasks</span>
+                    </a>
+                {% endif %}
+            </li>
+            <li class="sidebar-item {% if 'notification' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'notification_list' %}">
+                    <span>🔔</span>
+                    <span>Notifications</span>
+                    {% if unread_notifications_count > 0 %}
+                        <span class="badge">{{ unread_notifications_count }}</span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="sidebar-item {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}">
+                <a href="{% url 'calendar' %}">
+                    <span>📅</span>
+                    <span>Calendar</span>
+                </a>
+            </li>
+            <li class="sidebar-item {% if 'report' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'global_reports' %}">
+                    <span>📊</span>
+                    <span>Reports</span>
+                </a>
+            </li>
+            <li class="sidebar-item {% if request.resolver_match.url_name == 'settings' or request.resolver_match.url_name == 'change_password' %}active{% endif %}">
+                <a href="{% url 'settings' %}">
+                    <span>⚙️</span>
+                    <span>Settings</span>
+                </a>
+            </li>
+            <li class="sidebar-item" style="margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <a href="{% url 'logout' %}" style="color: #f87171;">
+                    <span>🚪</span>
+                    <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+        
+        {% if request.user.is_authenticated %}
+        <div class="sidebar-user">
+            {% if user_profile.profile_picture %}
+                <img src="{{ user_profile.profile_picture.url }}" alt="{{ user_profile.full_name }}" class="user-avatar">
+            {% else %}
+                <div class="user-avatar">
+                    {{ user_profile.full_name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+            <div class="user-meta">
+                <span class="user-name">{{ user_profile.full_name }}</span>
+                <span class="user-role-badge">{{ user_profile.role }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <!-- Main Content Layout -->
+    <div class="main-layout">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="page-title">
+                {% block header_title %}Dashboard{% endblock %}
+            </div>
+            
+            <div class="header-actions">
+                {% if is_admin or is_pm %}
+                    {% if sidebar_projects.exists %}
+                        <a href="{% url 'task_create' sidebar_projects.first.id %}" class="btn-quick-add">
+                            <span>+</span> New Task
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'project_create' %}" class="btn-quick-add" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);">
+                        <span>+</span> New Project
+                    </a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Main Panel Content -->
+        <main class="content-container">
+            <!-- Django Messages -->
+            {% if messages %}
+                <div class="alerts-wrapper">
+                    {% for message in messages %}
+                        <div class="alert-item {% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+                            <span>
+                                {% if message.tags == 'success' %}✅
+                                {% elif message.tags == 'error' %}❌
+                                {% elif message.tags == 'warning' %}⚠️
+                                {% else %}ℹ️{% endif %}
+                            </span>
+                            <div>{{ message }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+
+    <!-- Custom Script Block -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

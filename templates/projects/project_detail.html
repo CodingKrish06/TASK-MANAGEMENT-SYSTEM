@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.name }} - Project Workspace{% endblock %}
+
+{% block header_title %}Project: {{ project.name }} <span class="badge-status {% if project.status == 'Active' %}in-progress{% elif project.status == 'Completed' %}done{% else %}todo{% endif %}" style="font-size: 13px; vertical-align: middle; margin-left: 10px;">{{ project.status }}</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .project-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 1024px) {
+        .project-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .progress-bar-container {
+        background-color: var(--bg-primary);
+        border-radius: 12px;
+        height: 24px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        margin: 15px 0;
+    }
+
+    .progress-bar-fill {
+        background: var(--accent-gradient);
+        height: 100%;
+        transition: width 0.5s ease-out;
+        border-radius: 11px;
+    }
+
+    .progress-text {
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: 700;
+        color: white;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .meta-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .meta-item {
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .meta-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .sprint-card {
+        background-color: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .sprint-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="project-grid">
+    <!-- Main Left: Roadmap, Sprints and Backlog -->
+    <div>
+        <!-- Project Stats & Roadmap -->
+        <div class="glass-card">
+            <h3 class="section-title">📊 Roadmap & Velocity</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 10px;">
+                {{ project.description|default:"No project description provided." }}
+            </p>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: {{ progress }}%;"></div>
+                <span class="progress-text">{{ progress }}% Completed</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; text-align: center;">
+                <div style="background-color: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--info);">{{ todo_tasks }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 4px;">To Do</div>
+                </div>
+                <div style="background-color: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--warning);">{{ in_progress_tasks }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 4px;">In Progress</div>
+                </div>
+                <div style="background-color: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 20px; font-weight: 700; color: #c084fc;">{{ in_review_tasks }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 4px;">In Review</div>
+                </div>
+                <div style="background-color: rgba(255,255,255,0.02); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 20px; font-weight: 700; color: var(--success);">{{ done_tasks }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-top: 4px;">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sprints Section -->
+        <div class="glass-card">
+            <div class="section-header">
+                <h3 class="section-title">🏃 Active Sprints</h3>
+                {% if is_manager %}
+                    <a href="{% url 'sprint_create' project.id %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                        ➕ Create Sprint
+                    </a>
+                {% endif %}
+            </div>
+
+            {% for sprint in active_sprints %}
+                <div class="sprint-card">
+                    <div class="sprint-header">
+                        <h4 style="font-weight: 700; color: var(--text-main);">🏃 {{ sprint.name }}</h4>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span class="badge-status in-progress">Active</span>
+                            {% if is_manager %}
+                                <a href="{% url 'toggle_sprint_status' sprint.id %}" class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;">Deactivate</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                        Duration: {{ sprint.start_date|date:"M d" }} - {{ sprint.end_date|date:"M d, Y" }}
+                    </p>
+                    <a href="{% url 'kanban_board' project.id %}?sprint_id={{ sprint.id }}" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; width: 100%; justify-content: center;">
+                        Go to Sprint Board →
+                    </a>
+                </div>
+            {% empty %}
+                <div class="empty-state" style="padding: 20px;">
+                    <div class="empty-state-icon">🏃</div>
+                    <p style="font-size: 14px;">No active sprints in this project.</p>
+                </div>
+            {% endfor %}
+            
+            {% if project.sprints.all %}
+                <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">All Sprints</h4>
+                    {% for sprint in project.sprints.all %}
+                        {% if not sprint.is_active %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dotted var(--border-color);">
+                                <span style="font-size: 14px;">{{ sprint.name }} ({{ sprint.start_date|date:"M d" }} - {{ sprint.end_date|date:"M d" }})</span>
+                                <div style="display: inline-flex; gap: 8px;">
+                                    <span class="badge-status todo" style="font-size: 10px;">Inactive</span>
+                                    {% if is_manager %}
+                                        <a href="{% url 'toggle_sprint_status' sprint.id %}" class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;">Activate</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Backlog / Tasks Section -->
+        <div class="glass-card">
+            <div class="section-header">
+                <h3 class="section-title">📋 Backlog & Tasks</h3>
+                <div style="display: inline-flex; gap: 8px;">
+                    <a href="{% url 'kanban_board' project.id %}" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">
+                        📋 Interactive Board
+                    </a>
+                    {% if is_manager %}
+                        <a href="{% url 'task_create' project.id %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">
+                            ➕ Add Task
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if backlog_tasks.exists %}
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Assignee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in backlog_tasks %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'task_detail' task.id %}" style="color: var(--text-main); text-decoration: none; font-weight: 600;">
+                                            {{ task.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-status {% if task.status == 'To Do' %}todo{% elif task.status == 'In Progress' %}in-progress{% elif task.status == 'In Review' %}in-review{% elif task.status == 'Done' %}done{% endif %}">
+                                            {{ task.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ task.assignee.username|default:"Unassigned" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state" style="padding: 20px;">
+                    <div class="empty-state-icon">📋</div>
+                    <p style="font-size: 14px;">No backlog tasks. All tasks are currently assigned to active Sprints.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Side: Metadata and Members -->
+    <div>
+        <!-- Project Metadata Card -->
+        <div class="glass-card" style="padding: 24px;">
+            <h3 class="section-title" style="font-size: 16px; margin-bottom: 20px;">ℹ️ Project Information</h3>
+            <div class="meta-list">
+                <div class="meta-item">
+                    <span style="color: var(--text-muted); font-size: 13px;">Start Date</span>
+                    <span style="font-weight: 600; font-size: 13px;">{{ project.start_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span style="color: var(--text-muted); font-size: 13px;">End Date</span>
+                    <span style="font-weight: 600; font-size: 13px;">{{ project.end_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="meta-item">
+                    <span style="color: var(--text-muted); font-size: 13px;">Created By</span>
+                    <span style="font-weight: 600; font-size: 13px;">{{ project.created_by.username }}</span>
+                </div>
+                <div class="meta-item">
+                    <span style="color: var(--text-muted); font-size: 13px;">Total Tasks</span>
+                    <span style="font-weight: 600; font-size: 13px;">{{ total_tasks }}</span>
+                </div>
+            </div>
+            
+            {% if is_manager %}
+                <div style="display: flex; gap: 10px; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <a href="{% url 'project_edit' project.id %}" class="btn btn-secondary" style="flex: 1; justify-content: center; font-size: 12px; padding: 8px;">
+                        ✏️ Edit Project
+                    </a>
+                    {% if user_role == 'Administrator' %}
+                        <a href="{% url 'project_delete' project.id %}" class="btn btn-danger" style="flex: 1; justify-content: center; font-size: 12px; padding: 8px;">
+                            ✕ Delete
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Project Members Card -->
+        <div class="glass-card" style="padding: 24px;">
+            <div class="section-header" style="margin-bottom: 20px;">
+                <h3 class="section-title" style="font-size: 16px;">👥 Project Team</h3>
+                {% if is_manager %}
+                    <a href="{% url 'project_members' project.id %}" style="font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600;">Manage</a>
+                {% endif %}
+            </div>
+
+            {% for pmember in project.memberships.all %}
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                    <div class="user-avatar" style="width: 32px; height: 32px; font-size: 12px; border-color: transparent;">
+                        {{ pmember.user.username|slice:":1"|upper }}
+                    </div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">{{ pmember.user.username }}</span>
+                        <span style="font-size: 11px; color: var(--accent);">{{ pmember.role }}</span>
+                    </div>
+                </div>
+            {% empty %}
+                <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 15px 0;">No members assigned to this project team.</p>
+            {% endfor %}
+        </div>
+        
+        <!-- Reports Link Card -->
+        <div class="glass-card" style="padding: 24px; text-align: center;">
+            <h3 class="section-title" style="font-size: 16px; margin-bottom: 12px;">📊 Reports & Analysis</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Analyze task completion velocity, workload distribution, and timetables.</p>
+            <a href="{% url 'reports' project.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                📈 View Project Reports
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Management System - Complete Module Flow</title>
+  <style>
+    body { font-family: "Courier New", monospace; background:#0b1020; color:#e6edf3; padding:20px; }
+    .box { background:#111a33; border:1px solid #243055; padding:16px; border-radius:10px; white-space:pre; overflow:auto; }
+    h1 { margin: 0 0 12px 0; font-size:18px; color:#9fd1ff; }
+  </style>
+</head>
+<body>
+  <h1>Task Management System - Complete Module Flow (ASCII)</h1>
+
+  <div class="box">
+START
+ │
+ ▼
+────────────────────────────────────
+            LOGIN
+────────────────────────────────────
+ │
+ ├────────────► Register (New User)
+ │                   │
+ │                   ▼
+ │          Email OTP Verification
+ │                   │
+ │                   ▼
+ │        Registration Successful
+ │                   │
+ └───────────────────┘
+          │
+          ▼
+────────────────────────────────────
+             LOGIN
+────────────────────────────────────
+ │
+ ▼
+────────────────────────────────────
+           DASHBOARD
+────────────────────────────────────
+
+Dashboard Cards
+
+-------------------------------------
+👤 Total Users
+📁 Total Projects
+✅ Total Tasks
+✔ Completed Tasks
+⌛ Pending Tasks
+🔔 Notifications
+-------------------------------------
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+           USER PROFILE
+────────────────────────────────────
+
+View Profile
+Edit Profile
+Upload Profile Photo
+Change Password
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+             PROJECTS
+────────────────────────────────────
+
+Add Project
+
+↓
+
+Project Name
+Description
+Start Date
+End Date
+
+↓
+
+Save
+
+↓
+
+Database
+
+projects_project
+
+↓
+
+View Projects
+
+↓
+
+Edit Project
+
+↓
+
+Delete Project
+
+↓
+
+Project Details
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+          TEAM MEMBERS
+────────────────────────────────────
+
+Add Member
+
+↓
+
+Full Name
+Username
+Email
+Phone
+Role
+
+↓
+
+Assign Project
+
+↓
+
+Save
+
+↓
+
+Database
+
+projects_projectmember
+
+↓
+
+View Members
+
+↓
+
+Edit Member
+
+↓
+
+Delete Member
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+               TASKS
+────────────────────────────────────
+
+Add Task
+
+↓
+
+Task Title
+Description
+Priority
+Status
+Start Date
+Due Date
+Estimated Hours
+
+↓
+
+Assign User
+
+↓
+
+Save
+
+↓
+
+Database
+
+tasks_task
+
+↓
+
+View Tasks
+
+↓
+
+Edit Task
+
+↓
+
+Delete Task
+
+↓
+
+Update Status
+
+↓
+
+Comments
+
+↓
+
+Attachments
+
+↓
+
+Task Completed
+
+↓
+
+Notification Generated
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+          NOTIFICATIONS
+────────────────────────────────────
+
+Project Created
+
+↓
+
+Task Assigned
+
+↓
+
+Task Completed
+
+↓
+
+Member Added
+
+↓
+
+Password Changed
+
+↓
+
+Database
+
+notifications_notification
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+             REPORTS
+────────────────────────────────────
+
+Total Users
+
+Total Projects
+
+Total Tasks
+
+Completed Tasks
+
+Pending Tasks
+
+Project Report
+
+Task Report
+
+Download Report (PDF)
+
+                │
+────────────────┼──────────────────────────
+
+                ▼
+────────────────────────────────────
+             LOGOUT
+────────────────────────────────────
+
+↓
+
+Redirect
+
+↓
+
+LOGIN PAGE
+
+
+## Database Tables
+
+auth_user
+
+accounts_userprofile
+
+accounts_otp
+
+projects_project
+
+projects_projectmember
+
+tasks_sprint
+
+tasks_task
+
+tasks_comment
+
+tasks_attachment
+
+tasks_taskdependency
+
+notifications_notification
+
+
+## Final Navigation Menu
+
+Dashboard
+Profile
+Projects
+Team Members
+Tasks
+Notifications
+Reports
+Settings
+Logout
+  </div>
+</body>
+</html>
+

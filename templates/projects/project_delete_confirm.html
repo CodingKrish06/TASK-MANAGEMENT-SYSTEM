@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Project - Task Management System{% endblock %}
+
+{% block header_title %}Delete Project: {{ project.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 40px auto;">
+    <div class="glass-card" style="border-color: rgba(239, 68, 68, 0.2); background-color: rgba(239, 68, 68, 0.02);">
+        <h3 class="section-title" style="color: var(--danger); margin-bottom: 16px;">⚠️ Warning: Permanent Action</h3>
+        
+        <p style="font-size: 15px; line-height: 1.6; color: var(--text-main); margin-bottom: 20px;">
+            Are you sure you want to delete the project <strong>"{{ project.name }}"</strong>?
+        </p>
+        
+        <p style="font-size: 13px; line-height: 1.5; color: var(--text-muted); margin-bottom: 30px;">
+            This action cannot be undone. All sprints, tasks, comments, attachments, and dependencies associated with this project will be deleted permanently.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div style="display: flex; gap: 12px;">
+                <button type="submit" class="btn btn-danger" style="flex: 1; justify-content: center;">
+                    ✕ Delete Project
+                </button>
+                <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

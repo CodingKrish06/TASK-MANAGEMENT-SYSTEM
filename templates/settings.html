@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Task Management System{% endblock %}
+
+{% block header_title %}Account Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        padding: 14px 20px;
+        text-align: left;
+        width: 100%;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+        color: var(--text-main);
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn.active {
+        color: white;
+        background: var(--accent-gradient);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+    }
+
+    .settings-pane {
+        display: none;
+    }
+
+    .settings-pane.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-grid">
+    <!-- Left Sidebar Settings Navigation -->
+    <div>
+        <div class="glass-card" style="padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+            <button class="tab-btn {% if active_tab == 'profile' %}active{% endif %}" onclick="switchTab('profile', this)">
+                <span>👤</span> Profile Settings
+            </button>
+            <button class="tab-btn {% if active_tab == 'password' %}active{% endif %}" onclick="switchTab('password', this)">
+                <span>🔑</span> Security & Password
+            </button>
+            <a href="{% url 'profile' %}" class="tab-btn" style="text-decoration: none;">
+                <span>👁️</span> View Profile Page
+            </a>
+        </div>
+    </div>
+
+    <!-- Right Panels (Forms) -->
+    <div>
+        <!-- Profile Settings Form -->
+        <div id="pane-profile" class="settings-pane {% if active_tab == 'profile' %}active{% endif %}">
+            <div class="glass-card">
+                <h3 class="section-title" style="margin-bottom: 24px;">👤 Edit Profile Details</h3>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_profile">
+                    
+                    <div class="form-group">
+                        <label for="{{ profile_form.full_name.id_for_label }}">Full Name</label>
+                        {{ profile_form.full_name }}
+                        {% if profile_form.full_name.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ profile_form.full_name.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ profile_form.phone_number.id_for_label }}">Phone Number</label>
+                        {{ profile_form.phone_number }}
+                        {% if profile_form.phone_number.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ profile_form.phone_number.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ profile_form.designation.id_for_label }}">Designation / Job Title</label>
+                        {{ profile_form.designation }}
+                        {% if profile_form.designation.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ profile_form.designation.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ profile_form.department.id_for_label }}">Department</label>
+                        {{ profile_form.department }}
+                        {% if profile_form.department.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ profile_form.department.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ profile_form.profile_picture.id_for_label }}">Profile Picture</label>
+                        {{ profile_form.profile_picture }}
+                        {% if profile_form.profile_picture.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ profile_form.profile_picture.errors.as_text }}</span>
+                        {% endif %}
+                        {% if user_profile.profile_picture %}
+                            <div style="margin-top: 12px; display: flex; align-items: center; gap: 10px;">
+                                <img src="{{ user_profile.profile_picture.url }}" alt="avatar" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);">
+                                <span style="font-size: 12px; color: var(--text-muted);">Current avatar</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ profile_form.bio.id_for_label }}">Bio Description</label>
+                        {{ profile_form.bio }}
+                        {% if profile_form.bio.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ profile_form.bio.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        💾 Save Profile Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security / Password Form -->
+        <div id="pane-password" class="settings-pane {% if active_tab == 'password' %}active{% endif %}">
+            <div class="glass-card">
+                <h3 class="section-title" style="margin-bottom: 24px;">🔑 Change Password</h3>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="form-group">
+                        <label for="{{ password_form.old_password.id_for_label }}">Current Password</label>
+                        {{ password_form.old_password }}
+                        {% if password_form.old_password.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ password_form.old_password.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ password_form.new_password1.id_for_label }}">New Password</label>
+                        {{ password_form.new_password1 }}
+                        {% if password_form.new_password1.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ password_form.new_password1.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ password_form.new_password2.id_for_label }}">Confirm New Password</label>
+                        {{ password_form.new_password2 }}
+                        {% if password_form.new_password2.errors %}
+                            <span style="color: var(--danger); font-size: 13px;">{{ password_form.new_password2.errors.as_text }}</span>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
+                        🔑 Update Account Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabName, clickedBtn) {
+        // Hide all panes
+        document.querySelectorAll('.settings-pane').forEach(function(pane) {
+            pane.classList.remove('active');
+        });
+        // Deactivate all buttons
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected pane and button active state
+        document.getElementById('pane-' + tabName).classList.add('active');
+        clickedBtn.classList.add('active');
+    }
+</script>
+{% endblock %}

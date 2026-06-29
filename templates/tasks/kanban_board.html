@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Kanban Board - {{ project.name }}{% endblock %}
+
+{% block header_title %}Kanban Board: {{ project.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .board-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .board-columns {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        align-items: start;
+    }
+
+    @media (max-width: 1400px) {
+        .board-columns {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .board-columns {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .board-columns {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .board-column {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 16px;
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 12px;
+        margin-bottom: 8px;
+    }
+
+    .column-title {
+        font-weight: 700;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .task-card {
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .task-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        box-shadow: 0 6px 12px rgba(99, 102, 241, 0.15);
+    }
+
+    .task-card-title {
+        font-weight: 600;
+        color: var(--text-main);
+        font-size: 14px;
+        text-decoration: none;
+    }
+
+    .task-card-title:hover {
+        color: var(--accent);
+    }
+
+    .task-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: var(--text-muted);
+        border-top: 1px solid var(--border-color);
+        padding-top: 12px;
+        margin-top: 4px;
+    }
+
+    .task-controls {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-move {
+        background-color: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-move:hover {
+        background: var(--accent-gradient);
+        color: white;
+        border-color: transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="board-header">
+        <!-- Sprint Selector -->
+        <form method="GET" style="display: flex; gap: 12px; align-items: center;">
+            <label for="sprint_id" style="font-weight: 600; color: var(--text-muted); font-size: 14px;">Sprint Filter:</label>
+            <select name="sprint_id" id="sprint_id" class="form-control" onchange="this.form.submit()" style="width: auto;">
+                <option value="">All Project Tasks</option>
+                {% for sprint in sprints %}
+                    <option value="{{ sprint.id }}" {% if selected_sprint.id == sprint.id %}selected{% endif %}>
+                        {{ sprint.name }} {% if sprint.is_active %}(Active){% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+        
+        <div>
+            {% if is_manager %}
+                <a href="{% url 'task_create' project.id %}{% if selected_sprint %}?sprint_id={{ selected_sprint.id }}{% endif %}" class="btn btn-primary">
+                    ➕ Add Task
+                </a>
+            {% endif %}
+            <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary">
+                ← Project Workspace
+            </a>
+        </div>
+    </div>
+
+    <!-- Kanban Board Grid -->
+    <div class="board-columns">
+        <!-- COLUMN 1: To Do -->
+        <div class="board-column">
+            <div class="column-header" style="border-bottom-color: var(--info);">
+                <div class="column-title">
+                    <span style="color: var(--info);">🔵</span> To Do
+                </div>
+                <span class="badge-status todo">{{ todo_tasks.count }}</span>
+            </div>
+            
+            {% for task in todo_tasks %}
+                <div class="task-card">
+                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+                        {% if task.task_type == 'Bug' %}🐛 Bug{% elif task.task_type == 'User Story' %}📖 Story{% else %}📋 Task{% endif %}
+                    </span>
+                    <a href="{% url 'task_detail' task.id %}" class="task-card-title">{{ task.title }}</a>
+                    <div>
+                        <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                    </div>
+                    <div class="task-card-footer">
+                        <span>👤 {{ task.assignee.username|default:"Unassigned" }}</span>
+                        <div class="task-controls">
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Blocked">
+                                <button type="submit" class="btn-move" title="Block Task" style="color: var(--danger);">🛑</button>
+                            </form>
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="In Progress">
+                                <button type="submit" class="btn-move" title="Start Task">▶</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No tasks</div>
+            {% endfor %}
+        </div>
+
+        <!-- COLUMN 2: In Progress -->
+        <div class="board-column">
+            <div class="column-header" style="border-bottom-color: var(--warning);">
+                <div class="column-title">
+                    <span style="color: var(--warning);">🟡</span> In Progress
+                </div>
+                <span class="badge-status in-progress">{{ in_progress_tasks.count }}</span>
+            </div>
+
+            {% for task in in_progress_tasks %}
+                <div class="task-card">
+                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+                        {% if task.task_type == 'Bug' %}🐛 Bug{% elif task.task_type == 'User Story' %}📖 Story{% else %}📋 Task{% endif %}
+                    </span>
+                    <a href="{% url 'task_detail' task.id %}" class="task-card-title">{{ task.title }}</a>
+                    <div>
+                        <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                    </div>
+                    <div class="task-card-footer">
+                        <span>👤 {{ task.assignee.username|default:"Unassigned" }}</span>
+                        <div class="task-controls">
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Blocked">
+                                <button type="submit" class="btn-move" title="Block Task" style="color: var(--danger);">🛑</button>
+                            </form>
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="To Do">
+                                <button type="submit" class="btn-move" title="Move to To Do">◀</button>
+                            </form>
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Review">
+                                <button type="submit" class="btn-move" title="Move to Review">▶</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No tasks</div>
+            {% endfor %}
+        </div>
+
+        <!-- COLUMN 3: Review -->
+        <div class="board-column">
+            <div class="column-header" style="border-bottom-color: #c084fc;">
+                <div class="column-title">
+                    <span style="color: #c084fc;">🟣</span> Review
+                </div>
+                <span class="badge-status in-review" style="background-color: rgba(168,85,247,0.15); color: #c084fc;">{{ review_tasks.count }}</span>
+            </div>
+
+            {% for task in review_tasks %}
+                <div class="task-card">
+                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+                        {% if task.task_type == 'Bug' %}🐛 Bug{% elif task.task_type == 'User Story' %}📖 Story{% else %}📋 Task{% endif %}
+                    </span>
+                    <a href="{% url 'task_detail' task.id %}" class="task-card-title">{{ task.title }}</a>
+                    <div>
+                        <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                    </div>
+                    <div class="task-card-footer">
+                        <span>👤 {{ task.assignee.username|default:"Unassigned" }}</span>
+                        <div class="task-controls">
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Blocked">
+                                <button type="submit" class="btn-move" title="Block Task" style="color: var(--danger);">🛑</button>
+                            </form>
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="In Progress">
+                                <button type="submit" class="btn-move" title="Move to In Progress">◀</button>
+                            </form>
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Done">
+                                <button type="submit" class="btn-move" title="Complete Task" style="background-color: var(--success-glow); color: var(--success);">✔</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No tasks</div>
+            {% endfor %}
+        </div>
+
+        <!-- COLUMN 4: Blocked -->
+        <div class="board-column">
+            <div class="column-header" style="border-bottom-color: var(--danger);">
+                <div class="column-title">
+                    <span style="color: var(--danger);">🔴</span> Blocked
+                </div>
+                <span class="badge-status todo" style="background-color: rgba(239, 68, 68, 0.15); color: var(--danger);">{{ blocked_tasks.count }}</span>
+            </div>
+
+            {% for task in blocked_tasks %}
+                <div class="task-card" style="border-color: rgba(239, 68, 68, 0.3);">
+                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--danger);">⚠️ Blocked</span>
+                    <a href="{% url 'task_detail' task.id %}" class="task-card-title" style="color: var(--danger);">{{ task.title }}</a>
+                    <div>
+                        <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                    </div>
+                    <div class="task-card-footer">
+                        <span>👤 {{ task.assignee.username|default:"Unassigned" }}</span>
+                        <div class="task-controls">
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="To Do">
+                                <button type="submit" class="btn-move" title="Move to To Do">◀</button>
+                            </form>
+                            <form method="POST" action="{% url 'update_task_status' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="In Progress">
+                                <button type="submit" class="btn-move" title="Move to In Progress">▶</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No tasks</div>
+            {% endfor %}
+        </div>
+
+        <!-- COLUMN 5: Done -->
+        <div class="board-column">
+            <div class="column-header" style="border-bottom-color: var(--success);">
+                <div class="column-title">
+                    <span style="color: var(--success);">🟢</span> Done
+                </div>
+                <span class="badge-status done">{{ done_tasks.count }}</span>
+            </div>
+
+            {% for task in done_tasks %}
+                <div class="task-card" style="opacity: 0.85; border-color: rgba(16, 185, 129, 0.2);">
+                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); text-decoration: line-through;">
+                        {% if task.task_type == 'Bug' %}🐛 Bug{% elif task.task_type == 'User Story' %}📖 Story{% else %}📋 Task{% endif %}
+                    </span>
+                    <a href="{% url 'task_detail' task.id %}" class="task-card-title" style="text-decoration: line-through; color: var(--text-muted);">{{ task.title }}</a>
+                    <div>
+                        <span class="badge-priority {{ task.priority|lower }}">{{ task.priority }}</span>
+                    </div>
+                    <div class="task-card-footer">
+                        <span>👤 {{ task.assignee.username|default:"Unassigned" }}</span>
+                        <div class="task-controls">
+                            <form method="POST" action="{% url 'update_task_status' task.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Review">
+                                <button type="submit" class="btn-move" title="Reopen Task">◀</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 20px 0;">No tasks</div>
+            {% endfor %}
+        </div>
+    </div>
+    </div>
+{% endblock %}

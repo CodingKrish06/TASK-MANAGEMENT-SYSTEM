@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Password Reset OTP - Task Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .otp-container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .otp-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .otp-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .otp-header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .otp-header p {
+            color: #999;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .email-display {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .otp-input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 24px;
+            letter-spacing: 10px;
+            text-align: center;
+            font-weight: bold;
+            transition: border-color 0.3s;
+            font-family: monospace;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-verify {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-verify:hover {
+            transform: translateY(-2px);
+        }
+
+        .resend-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .resend-text {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .btn-resend {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-resend:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .error-list {
+            list-style: none;
+            margin: 5px 0 0 0;
+            padding: 0;
+        }
+
+        .error-list li {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .footer-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="otp-container">
+        <div class="otp-header">
+            <div class="otp-icon">🔒</div>
+            <h1>Verify Password Reset</h1>
+            <p>We've sent a 6-digit OTP to your email address</p>
+        </div>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="email-display">
+            📬 {{ email }}
+        </div>
+
+        <div class="info-box">
+            Please enter the 6-digit OTP sent to your email to verify your identity.
+        </div>
+
+        <form method="POST" class="otp-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="otp_code">Enter OTP</label>
+                <div class="otp-input-wrapper">
+                    {{ form.otp_code }}
+                </div>
+                {% if form.otp_code.errors %}
+                    <ul class="error-list">
+                        {% for error in form.otp_code.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn-verify">✓ Verify OTP</button>
+        </form>
+
+        <div class="resend-section">
+            <p class="resend-text">Didn't receive the OTP?</p>
+            <a href="{% url 'resend_reset_otp' %}" class="btn-resend">Resend OTP</a>
+        </div>
+
+        <div class="footer-link">
+            <p>Want to start over? <a href="{% url 'forgot_password' %}">Try again</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus on OTP input
+        document.getElementById('id_otp_code').focus();
+
+        // Allow only numeric input
+        document.getElementById('id_otp_code').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Prevent pasting non-numeric characters
+        document.getElementById('id_otp_code').addEventListener('paste', function(e) {
+            let paste = (e.clipboardData || window.clipboardData).getData('text');
+            if (!/^\d+$/.test(paste)) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

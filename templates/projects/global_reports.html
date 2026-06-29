@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}System Reports - Task Management System{% endblock %}
+
+{% block header_title %}System Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .stat-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-number {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-top: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <!-- PDF Download Header Action -->
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 24px;">
+        <a href="{% url 'download_report_pdf' %}" class="btn btn-primary">
+            📥 Download Report (PDF)
+        </a>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ total_users }}</span>
+                <span class="stat-label">Total Users</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📁</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ total_projects }}</span>
+                <span class="stat-label">Total Projects</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ total_tasks }}</span>
+                <span class="stat-label">Total Tasks</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color: var(--success);">✔</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ completed_tasks }}</span>
+                <span class="stat-label">Completed Tasks</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="color: var(--warning);">⌛</div>
+            <div class="stat-info">
+                <span class="stat-number">{{ pending_tasks }}</span>
+                <span class="stat-label">Pending Tasks</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Table Summary -->
+    <div class="glass-card">
+        <h3 class="section-title" style="margin-bottom: 20px;">📁 Project Progress & Workload</h3>
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>Timeline</th>
+                        <th>Tasks Velocity</th>
+                        <th>Completion Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                    {% with done=project.done_count total=project.task_count %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'project_detail' project.id %}" style="color: var(--text-main); font-weight: 600; text-decoration: none;">
+                                {{ project.name }}
+                            </a>
+                        </td>
+                        <td style="font-size: 13px; color: var(--text-muted);">
+                            {{ project.start_date|date:"Y-m-d" }} to {{ project.end_date|date:"Y-m-d" }}
+                        </td>
+                        <td>
+                            <span style="font-weight: 600;">{{ done }}</span> / {{ total }} Tasks Done
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="flex-grow: 1; height: 8px; background-color: var(--bg-primary); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);">
+                                    <div style="height: 100%; background: var(--accent-gradient); width: {% if total > 0 %}{% widthratio done total 100 %}{% else %}0{% endif %}%;"></div>
+                                </div>
+                                <span style="font-weight: 600; font-size: 13px; width: 40px; text-align: right;">
+                                    {% if total > 0 %}{% widthratio done total 100 %}%{% else %}0%{% endif %}
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px 0;">No projects created yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Details breakdown -->
+    <div class="charts-grid">
+        <!-- Priority Card -->
+        <div class="glass-card">
+            <h3 class="section-title" style="margin-bottom: 16px; font-size: 16px;">🔥 Tasks by Priority</h3>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in tasks_by_priority %}
+                            <tr>
+                                <td>
+                                    <span class="badge-priority {{ item.priority|lower }}">{{ item.priority }}</span>
+                                </td>
+                                <td style="font-weight: 600;">{{ item.count }} Tasks</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2" style="text-align: center; color: var(--text-muted); font-size: 13px;">No data</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="glass-card">
+            <h3 class="section-title" style="margin-bottom: 16px; font-size: 16px;">📈 Tasks by Status</h3>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in tasks_by_status %}
+                            <tr>
+                                <td>
+                                    <span class="badge-status {% if item.status == 'To Do' %}todo{% elif item.status == 'In Progress' %}in-progress{% elif item.status == 'In Review' %}in-review{% else %}done{% endif %}">{{ item.status }}</span>
+                                </td>
+                                <td style="font-weight: 600;">{{ item.count }} Tasks</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2" style="text-align: center; color: var(--text-muted); font-size: 13px;">No data</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

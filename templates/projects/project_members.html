@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Project Team - {{ project.name }}{% endblock %}
+
+{% block header_title %}Manage Team: {{ project.name }}{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+    <!-- Left Panel: Add Member Form -->
+    <div>
+        <div class="glass-card">
+            <h3 class="section-title" style="font-size: 16px; margin-bottom: 20px;">➕ Assign Team Member</h3>
+            
+            {% if is_manager %}
+                {% if available_users.exists %}
+                    <form method="POST" action="{% url 'add_project_member' project.id %}">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="id_user">Select User</label>
+                            <select name="user" id="id_user" class="form-control" required>
+                                <option value="" disabled selected>Select a User</option>
+                                {% for u in available_users %}
+                                    <option value="{{ u.id }}">{{ u.username }} ({{ u.email }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_role">Role in Project</label>
+                            <select name="role" id="id_role" class="form-control" required>
+                                <option value="Team Member">Team Member</option>
+                                <option value="Project Manager">Project Manager</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
+                            💾 Add to Project Team
+                        </button>
+                    </form>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">
+                        All registered users are already members of this project team.
+                    </p>
+                {% endif %}
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0;">
+                    You do not have permission to manage members.
+                </p>
+            {% endif %}
+            
+            <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; margin-top: 15px;">
+                ← Back to Project Details
+            </a>
+        </div>
+    </div>
+
+    <!-- Right Panel: Members List -->
+    <div>
+        <div class="glass-card">
+            <h3 class="section-title">👥 Current Project Team</h3>
+            
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role in Project</th>
+                            {% if is_manager %}
+                                <th style="text-align: right;">Action</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for membership in memberships %}
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--text-main);">{{ membership.user.username }}</div>
+                                </td>
+                                <td>{{ membership.user.email }}</td>
+                                <td>
+                                    <span class="badge-status {% if membership.role == 'Administrator' %}todo{% elif membership.role == 'Project Manager' %}in-progress{% else %}done{% endif %}">
+                                        {{ membership.role }}
+                                    </span>
+                                </td>
+                                {% if is_manager %}
+                                    <td style="text-align: right;">
+                                        <a href="{% url 'remove_project_member' membership.id %}" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="return confirm('Are you sure you want to remove {{ membership.user.username }} from the project team?');">
+                                            ✕ Remove
+                                        </a>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

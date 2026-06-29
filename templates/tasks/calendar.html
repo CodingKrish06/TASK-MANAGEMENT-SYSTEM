@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendar Scheduling - Task Management System{% endblock %}
+
+{% block header_title %}Calendar Schedule{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-container {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .calendar-title-text {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-main);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+    }
+
+    .calendar-day-header {
+        text-align: center;
+        font-weight: 700;
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        padding: 10px 0;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .calendar-cell {
+        background-color: rgba(255, 255, 255, 0.01);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        min-height: 110px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .calendar-cell:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+        border-color: var(--accent);
+    }
+
+    .calendar-cell.out-of-month {
+        opacity: 0.3;
+    }
+
+    .calendar-cell.today {
+        background-color: rgba(99, 102, 241, 0.04);
+        border-color: var(--accent);
+        box-shadow: inset 0 0 10px rgba(99, 102, 241, 0.1);
+    }
+
+    .day-number {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
+        align-self: flex-end;
+    }
+
+    .calendar-cell.today .day-number {
+        color: var(--accent);
+    }
+
+    .calendar-task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 8px;
+        overflow-y: auto;
+        max-height: 70px;
+    }
+
+    .calendar-task-badge {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 3px 6px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border-width: 1px;
+        border-style: solid;
+        transition: all 0.15s ease;
+    }
+
+    .calendar-task-badge:hover {
+        transform: scale(1.02);
+    }
+
+    .calendar-task-badge.start {
+        background-color: rgba(16, 185, 129, 0.08);
+        border-color: rgba(16, 185, 129, 0.2);
+        color: var(--success);
+    }
+
+    .calendar-task-badge.due {
+        background-color: rgba(245, 158, 11, 0.08);
+        border-color: rgba(245, 158, 11, 0.2);
+        color: var(--warning);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <!-- Month Navigation header -->
+    <div class="calendar-header">
+        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-secondary" style="padding: 8px 16px;">
+            ◀ Previous Month
+        </a>
+        <div class="calendar-title-text">
+            📅 {{ month_name }} {{ year }}
+        </div>
+        <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-secondary" style="padding: 8px 16px;">
+            Next Month ▶
+        </a>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar-grid">
+        <!-- Weekday Headers -->
+        <div class="calendar-day-header">Sun</div>
+        <div class="calendar-day-header">Mon</div>
+        <div class="calendar-day-header">Tue</div>
+        <div class="calendar-day-header">Wed</div>
+        <div class="calendar-day-header">Thu</div>
+        <div class="calendar-day-header">Fri</div>
+        <div class="calendar-day-header">Sat</div>
+
+        <!-- Days -->
+        {% for week in weeks %}
+            {% for day in week %}
+                <div class="calendar-cell {% if not day.in_month %}out-of-month{% endif %} {% if day.is_today %}today{% endif %}">
+                    <span class="day-number">{{ day.day_num }}</span>
+                    
+                    <div class="calendar-task-list">
+                        {% for item in day.items %}
+                            <a href="{% url 'task_detail' item.task.id %}" class="calendar-task-badge {{ item.type }}" title="{{ item.task.title }}">
+                                {{ item.label }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

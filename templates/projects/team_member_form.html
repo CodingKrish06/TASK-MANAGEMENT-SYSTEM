@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Task Management System{% endblock %}
+
+{% block header_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div class="glass-card">
+        <h3 class="section-title" style="margin-bottom: 24px;">👤 Member Profile Details</h3>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert-item error" style="margin-bottom: 20px;">
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% if form.username %}
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                            {{ form.username.errors.as_text }}
+                        </span>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.full_name.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.email.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                {{ form.phone_number }}
+                {% if form.phone_number.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.phone_number.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.role.id_for_label }}">System Access Role</label>
+                {{ form.role }}
+                {% if form.role.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.role.errors.as_text }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.project.id_for_label }}">Assign to Workspace Project</label>
+                {{ form.project }}
+                {% if form.project.errors %}
+                    <span style="color: var(--danger); font-size: 13px; display: block; margin-top: 4px;">
+                        {{ form.project.errors.as_text }}
+                    </span>
+                {% endif %}
+                <small style="color: var(--text-muted); display: block; margin-top: 6px;">
+                    This will create a mapping in the project memberships. De-selecting will remove project membership if editing.
+                </small>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 30px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                    💾 Save Member
+                </button>
+                <a href="{% url 'global_team_members' %}" class="btn btn-secondary" style="flex: 1; justify-content: center;">
+                    ✕ Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
