@@ -135,14 +135,16 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Console back
 # For production, use:
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "venishanmugam08@gmail.com"
-EMAIL_HOST_PASSWORD = "qldw wgqx unhd gghq"
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+EMAIL_HOST_USER = 'krishnavenisivajothi18@gmail.com'
+EMAIL_HOST_PASSWORD = 'tfgd sfyx mqeu sieq'
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # Session Configuration
 SESSION_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
